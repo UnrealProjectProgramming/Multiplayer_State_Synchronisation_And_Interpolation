@@ -30,6 +30,19 @@ public:
 private:
 	FVector Velocity;
 
+	/*
+	* The mass of the car in KG
+	*/
+	UPROPERTY(EditAnywhere)
+	float Mass = 1000.0f;
+
+	/*
+	* The MaxDrivingForce of the car in N
+	*/
+	UPROPERTY(EditAnywhere)
+	float MaxDrivingForce = 10000;
+
+	float Throttle;
 	/** Handle pressing forwards */
 	void MoveForward(float Value);
 	
