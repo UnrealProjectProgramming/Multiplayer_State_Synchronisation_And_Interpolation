@@ -43,13 +43,23 @@ private:
 	UPROPERTY(EditAnywhere)
 	float MaxDrivingForce = 10000;
 
+	/*
+	* The MaxDrivingForce of the car in N
+	*/
+	UPROPERTY(EditAnywhere)
+	float MaxDegreesPerSecond = 90;
+
 	float Throttle;
+	float SteeringThrow;
 
 
 	/** Handle pressing forwards */
 	void MoveForward(float Value);
 	
+	void MoveRight(float Value);
+
 	void UpdateLocationFromVelocity(float DeltaTime);
 
+	void ApplyRotation(float DeltaTime);
 
 };
