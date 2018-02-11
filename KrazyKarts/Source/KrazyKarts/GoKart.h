@@ -49,9 +49,18 @@ private:
 	UPROPERTY(EditAnywhere)
 	float MaxDegreesPerSecond = 90;
 
+	/*
+	* The MaxDrivingForce of the car in N
+	*/
+	UPROPERTY(EditAnywhere)
+	float DragCoefficient = 16;
+
+
 	float Throttle;
 	float SteeringThrow;
 
+
+	FVector GetResistance();
 
 	/** Handle pressing forwards */
 	void MoveForward(float Value);

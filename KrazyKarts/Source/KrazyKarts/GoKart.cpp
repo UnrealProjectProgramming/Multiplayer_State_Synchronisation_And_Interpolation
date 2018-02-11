@@ -14,6 +14,13 @@ AGoKart::AGoKart()
 	
 }
 
+FVector AGoKart::GetResistance()
+{
+	float Speed = Velocity.Size();
+	FMath::Sqrt(Speed);
+	return -FMath::Square(Speed) * DragCoefficient * Velocity.GetSafeNormal();
+}
+
 // Called when the game starts or when spawned
 void AGoKart::BeginPlay()
 {
@@ -28,6 +35,8 @@ void AGoKart::Tick(float DeltaTime)
 
 	FVector Force;
 	Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
+	Force = Force + GetResistance();
+
 	FVector Acceleration = Force / Mass;
 	Velocity = Velocity + Acceleration * DeltaTime;
 
@@ -64,7 +73,6 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("MoveForward", this, &AGoKart::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AGoKart::MoveRight);
 }
-
 
 void AGoKart::MoveForward(float Value)
 {
