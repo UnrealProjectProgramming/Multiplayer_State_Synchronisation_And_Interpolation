@@ -4,6 +4,7 @@
 
 #include "Components/InputComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
 
 // Sets default values
 AGoKart::AGoKart()
@@ -14,11 +15,18 @@ AGoKart::AGoKart()
 	
 }
 
-FVector AGoKart::GetResistance()
+FVector AGoKart::GetAirResistance()
 {
 	float Speed = Velocity.Size();
 	FMath::Sqrt(Speed);
 	return -FMath::Square(Speed) * DragCoefficient * Velocity.GetSafeNormal();
+}
+
+FVector AGoKart::GetRollingResistance()
+{
+	float AccelerationDueToGravity = -GetWorld()->GetGravityZ() / 100.0f;
+	float NormalForce = Mass * AccelerationDueToGravity;
+	return   -Velocity.GetSafeNormal() * RollingResistenceCoefficient * NormalForce;
 }
 
 // Called when the game starts or when spawned
@@ -35,9 +43,13 @@ void AGoKart::Tick(float DeltaTime)
 
 	FVector Force;
 	Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
-	Force = Force + GetResistance();
+
+	Force += GetAirResistance();
+	Force += GetRollingResistance();
 
 	FVector Acceleration = Force / Mass;
+
+
 	Velocity = Velocity + Acceleration * DeltaTime;
 
 	ApplyRotation(DeltaTime);
