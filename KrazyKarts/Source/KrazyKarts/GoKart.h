@@ -43,11 +43,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	float MaxDrivingForce = 10000;
 
-	/*
-	* The MaxDrivingForce of the car in N
-	*/
+
 	UPROPERTY(EditAnywhere)
-	float MaxDegreesPerSecond = 90;
+	float MinTurningRadius = 10;
 
 	/*
 	* The MaxDrivingForce of the car in N
