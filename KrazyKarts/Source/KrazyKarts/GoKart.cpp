@@ -5,6 +5,7 @@
 #include "Components/InputComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 AGoKart::AGoKart()
@@ -29,6 +30,23 @@ FVector AGoKart::GetRollingResistance()
 	return   -Velocity.GetSafeNormal() * RollingResistenceCoefficient * NormalForce;
 }
 
+FString GetEnumText(ENetRole Role)
+{
+	switch (Role)
+	{
+	case ROLE_None:
+		return "None";
+	case ROLE_SimulatedProxy:
+		return "SimulatedProxy";
+	case ROLE_AutonomousProxy:
+		return "AutonomousProxy";
+	case ROLE_Authority:
+		return "Authority";
+	default:
+		return "failed to return an enum";
+		break;
+	}
+}
 // Called when the game starts or when spawned
 void AGoKart::BeginPlay()
 {
@@ -43,17 +61,16 @@ void AGoKart::Tick(float DeltaTime)
 
 	FVector Force;
 	Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
-
 	Force += GetAirResistance();
 	Force += GetRollingResistance();
 
 	FVector Acceleration = Force / Mass;
-
-
 	Velocity = Velocity + Acceleration * DeltaTime;
 
 	ApplyRotation(DeltaTime);
 	UpdateLocationFromVelocity(DeltaTime);
+
+	DrawDebugString(GetWorld(), FVector(0, 0, 100.0f), GetEnumText(Role), this, FColor::White, DeltaTime);
 }
 
 void AGoKart::ApplyRotation(float DeltaTime)
@@ -83,8 +100,21 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &AGoKart::Server_MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AGoKart::Server_MoveRight);
+	PlayerInputComponent->BindAxis("MoveForward", this, &AGoKart::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AGoKart::MoveRight);
+}
+
+void AGoKart::MoveForward(float Value)
+{
+	Throttle = Value;
+	Server_MoveForward(Value);
+
+}
+
+void AGoKart::MoveRight(float Value)
+{
+	SteeringThrow = Value;
+	Server_MoveRight(Value);
 }
 
 void AGoKart::Server_MoveForward_Implementation(float Value)
