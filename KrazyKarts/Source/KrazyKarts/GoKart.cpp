@@ -20,8 +20,7 @@ AGoKart::AGoKart()
 void AGoKart::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AGoKart, ReplicatedLocation);
-	DOREPLIFETIME(AGoKart, ReplicatedRotation);
+	DOREPLIFETIME(AGoKart, ReplicatedTransform);
 
 }
 
@@ -62,6 +61,10 @@ void AGoKart::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (HasAuthority())
+	{
+		NetUpdateFrequency = 1;
+	}
 }
 
 // Called every frame
@@ -81,17 +84,23 @@ void AGoKart::Tick(float DeltaTime)
 	UpdateLocationFromVelocity(DeltaTime);
 	if (HasAuthority())
 	{
-		ReplicatedLocation = GetActorLocation();
-		ReplicatedRotation = GetActorRotation();
+		ReplicatedTransform = GetActorTransform();
+
 	}
 	else
 	{
 		// in else , mean we either autonmous proxy or simulated proxy
-		SetActorLocation(ReplicatedLocation);
-		SetActorRotation(ReplicatedRotation);
 	}
 
 	DrawDebugString(GetWorld(), FVector(0, 0, 100.0f), GetEnumText(Role), this, FColor::White, DeltaTime);
+}
+
+
+void AGoKart::OnRep_ReplicatedTransform()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Replicated Transform"));
+	SetActorTransform(ReplicatedTransform);
+
 }
 
 void AGoKart::ApplyRotation(float DeltaTime)
@@ -124,6 +133,7 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("MoveForward", this, &AGoKart::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AGoKart::MoveRight);
 }
+
 
 void AGoKart::MoveForward(float Value)
 {
