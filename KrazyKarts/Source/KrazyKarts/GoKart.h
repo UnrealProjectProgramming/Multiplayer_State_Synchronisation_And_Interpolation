@@ -29,6 +29,8 @@ public:
 
 	
 private:
+
+	UPROPERTY(Replicated)
 	FVector Velocity;
 
 	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedTransform)
@@ -68,7 +70,10 @@ private:
 	float RollingResistenceCoefficient = 0.015;
 
 
+	UPROPERTY(Replicated)
 	float Throttle;
+
+	UPROPERTY(Replicated)
 	float SteeringThrow;
 
 
@@ -90,7 +95,6 @@ private:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_MoveRight(float Value);
-
 
 
 	void UpdateLocationFromVelocity(float DeltaTime);

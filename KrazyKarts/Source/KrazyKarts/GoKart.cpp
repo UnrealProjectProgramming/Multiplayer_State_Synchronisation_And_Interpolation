@@ -21,7 +21,9 @@ void AGoKart::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifeti
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AGoKart, ReplicatedTransform);
-
+	DOREPLIFETIME(AGoKart, Velocity);
+	DOREPLIFETIME(AGoKart, SteeringThrow);
+	DOREPLIFETIME(AGoKart, Throttle);
 }
 
 
@@ -98,9 +100,7 @@ void AGoKart::Tick(float DeltaTime)
 
 void AGoKart::OnRep_ReplicatedTransform()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Replicated Transform"));
 	SetActorTransform(ReplicatedTransform);
-
 }
 
 void AGoKart::ApplyRotation(float DeltaTime)
