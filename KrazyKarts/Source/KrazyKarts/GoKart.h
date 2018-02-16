@@ -6,6 +6,49 @@
 #include "GameFramework/Pawn.h"
 #include "GoKart.generated.h"
 
+
+USTRUCT()
+struct FGoKartMove
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY()
+	float Throttle;
+
+	UPROPERTY()
+	float SteeringThrow;
+
+	UPROPERTY()
+	float DeltaTime; // we added the delta time so we can simulate the move on the server ( OnReciveMove ).
+
+	UPROPERTY()
+	float Time; // That is the Time at which the move started.
+	// This way when we recive our LastMove from the server we can acknoldge moves and we can check if they are before or equal to that LastMove
+	// and in that case we can remove them because they are Old moves. and they new moves are the one that are greater than the LastTime
+	// and they are going to stay in the list.
+
+};
+
+USTRUCT()
+struct FGoKartState
+{
+	GENERATED_USTRUCT_BODY()
+
+	// The Velocity and the Transform and the two Canonical State that will be sent back to the Clients.
+	// and the client can simulate coz we sending the last move appliad to them.
+	UPROPERTY()
+	FTransform Transform;
+	UPROPERTY()
+	FVector Velocity;
+
+	UPROPERTY()
+	FGoKartMove LastMove; // it will be helpful because on the non autnomous proxy we will need that throttle to be interpulated.
+
+
+};
+
+
+
 UCLASS()
 class KRAZYKARTS_API AGoKart : public APawn
 {
