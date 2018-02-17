@@ -40,11 +40,8 @@ struct FGoKartState
 	FTransform Transform;
 	UPROPERTY()
 	FVector Velocity;
-
 	UPROPERTY()
 	FGoKartMove LastMove; // it will be helpful because on the non autnomous proxy we will need that throttle to be interpulated.
-
-
 };
 
 
@@ -73,15 +70,7 @@ public:
 	
 private:
 
-	UPROPERTY(Replicated)
-	FVector Velocity;
-
-	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedTransform)
-	FTransform ReplicatedTransform;
-
-	UFUNCTION()
-	void OnRep_ReplicatedTransform();
-
+	
 
 
 	/*
@@ -113,11 +102,22 @@ private:
 	float RollingResistenceCoefficient = 0.015;
 
 
+	UPROPERTY()
+	FVector Velocity;
+
+	UPROPERTY(ReplicatedUsing = OnRep_ServerState)
+	FGoKartState ServerState;
+
+	UFUNCTION()
+	void OnRep_ServerState();
+
+
 	UPROPERTY(Replicated)
 	float Throttle;
 
 	UPROPERTY(Replicated)
 	float SteeringThrow;
+
 
 
 	FVector GetAirResistance();
@@ -134,11 +134,7 @@ private:
 
 	/** These two functions are responsible for updating the car movement in the server */
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_MoveForward(float Value);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_MoveRight(float Value);
-
+	void Server_SendMove(FGoKartMove Move);
 
 	void UpdateLocationFromVelocity(float DeltaTime);
 
