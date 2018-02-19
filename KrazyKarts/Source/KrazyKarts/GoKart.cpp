@@ -86,7 +86,7 @@ void AGoKart::Tick(float DeltaTime)
 	DrawDebugString(GetWorld(), FVector(0, 0, 100.0f), GetEnumText(Role), this, FColor::White, DeltaTime);
 }
 
-void AGoKart::SimulateMove(FGoKartMove Move)
+void AGoKart::SimulateMove(const FGoKartMove& Move)
 {
 	FVector Force;
 	Force = GetActorForwardVector() * MaxDrivingForce * Move.Throttle;
@@ -129,6 +129,12 @@ void AGoKart::OnRep_ServerState()
 	SetActorTransform(ServerState.Transform);
 	Velocity = ServerState.Velocity;
 	ClearAcknowledgeMoves(ServerState.LastMove);
+
+	for (const FGoKartMove& Move : UnacknowledgedMoves)
+	{
+		SimulateMove(Move);
+	}
+
 }
 
 void AGoKart::ApplyRotation(float DeltaTime, float SteeringThrow)
