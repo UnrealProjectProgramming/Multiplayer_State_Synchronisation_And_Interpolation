@@ -71,16 +71,22 @@ void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (IsLocallyControlled())
+	if (Role == ROLE_AutonomousProxy)
 	{
 		FGoKartMove Move = CreateMove(DeltaTime);
-		if (!HasAuthority())
-		{
-			UnacknowledgedMoves.Add(Move);
-			UE_LOG(LogTemp, Warning, TEXT("Queue Length: %d"), UnacknowledgedMoves.Num())
-		}
-		Server_SendMove(Move);
 		SimulateMove(Move);
+		UnacknowledgedMoves.Add(Move);
+		Server_SendMove(Move);
+	}
+	if (Role == ROLE_SimulatedProxy)
+	{
+		SimulateMove(ServerState.LastMove);
+	}
+	// This means that we are the server and in controll of the Pawn.
+	if (Role == ROLE_Authority && GetRemoteRole() == ROLE_SimulatedProxy)
+	{
+		FGoKartMove Move = CreateMove(DeltaTime);
+		Server_SendMove(Move);
 	}
 
 	DrawDebugString(GetWorld(), FVector(0, 0, 100.0f), GetEnumText(Role), this, FColor::White, DeltaTime);
@@ -129,12 +135,10 @@ void AGoKart::OnRep_ServerState()
 	SetActorTransform(ServerState.Transform);
 	Velocity = ServerState.Velocity;
 	ClearAcknowledgeMoves(ServerState.LastMove);
-
 	for (const FGoKartMove& Move : UnacknowledgedMoves)
 	{
 		SimulateMove(Move);
 	}
-
 }
 
 void AGoKart::ApplyRotation(float DeltaTime, float SteeringThrow)
@@ -193,6 +197,7 @@ void AGoKart::Server_SendMove_Implementation(FGoKartMove Move)
 
 bool AGoKart::Server_SendMove_Validate(FGoKartMove Move)
 {
-	return true;
+	bool bIsValid = ( Move.Throttle <= 1 && Move.Throttle >= -1  && Move.SteeringThrow <= 1 && Move.SteeringThrow >= -1);
+	return bIsValid;
 }
 
