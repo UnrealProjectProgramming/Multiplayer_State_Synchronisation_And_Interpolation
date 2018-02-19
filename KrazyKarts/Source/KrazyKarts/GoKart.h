@@ -69,10 +69,8 @@ public:
 
 	
 private:
-
 	
-
-
+	void SimulateMove(FGoKartMove Move);
 	/*
 	* The mass of the car in KG
 	*/
@@ -111,33 +109,22 @@ private:
 	UFUNCTION()
 	void OnRep_ServerState();
 
-
-	UPROPERTY(Replicated)
 	float Throttle;
-
-	UPROPERTY(Replicated)
 	float SteeringThrow;
-
-
 
 	FVector GetAirResistance();
 	FVector GetRollingResistance();
 
-
-
 	/** These two functions are responsible for updating the car movement Localy then calling the Server_MoveForward and MoveRight sending them the value to 
 	 update them in the server, so they are both udpdate in the server and in the Clinet " Locally " */
 	void MoveForward(float Value);
-
 	void MoveRight(float Value);
-
-
 	/** These two functions are responsible for updating the car movement in the server */
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendMove(FGoKartMove Move);
 
 	void UpdateLocationFromVelocity(float DeltaTime);
 
-	void ApplyRotation(float DeltaTime);
+	void ApplyRotation(float DeltaTime, float SteeringThrow);
 
 };
