@@ -97,7 +97,7 @@ void AGoKart::SimulateMove(const FGoKartMove& Move)
 	FVector Force;
 	Force = GetActorForwardVector() * MaxDrivingForce * Move.Throttle;
 	Force += GetAirResistance();
-	Force += GetRollingResistance();
+	Force += GetRollingResistance(); 
 
 	FVector Acceleration = Force / Mass;
 	Velocity = Velocity + Acceleration * Move.DeltaTime;

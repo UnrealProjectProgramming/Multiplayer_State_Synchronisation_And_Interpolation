@@ -32,3 +32,10 @@
   between updates: Simulating
   Information recived: Transform and velocity and server time.
   OnRecipet: Replay the control since server time , meaning that it will go back to the previous state in this Exact Time.
+
+
+
+* Refactoring our class as it gets too large , This site is very good for Design Patterns and Refactoring : https://refactoring.guru
+  Refactoring Process : we Have our main Class which is GoKart Actor in this class we will Handle Input Binding and we will refactor two compoanents from it 
+  First component will be Movement Component and it will be responsible for smimulating movement, 2nd Component will be Replication Component and it will be 
+  responsible for replicating components and 2nd compnent must have direct access to first one.
