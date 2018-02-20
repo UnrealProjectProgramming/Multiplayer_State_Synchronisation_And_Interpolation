@@ -4,30 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "GoKartMovementComponent.h"
 #include "GoKart.generated.h"
 
-
-USTRUCT()
-struct FGoKartMove
-{
-	GENERATED_USTRUCT_BODY()
-
-	UPROPERTY()
-	float Throttle;
-
-	UPROPERTY()
-	float SteeringThrow;
-
-	UPROPERTY()
-	float DeltaTime; // we added the delta time so we can simulate the move on the server ( OnReciveMove ).
-
-	UPROPERTY()
-	float Time; // That is the Time at which the move started.
-	// This way when we recive our LastMove from the server we can acknoldge moves and we can check if they are before or equal to that LastMove
-	// and in that case we can remove them because they are Old moves. and they new moves are the one that are greater than the LastTime
-	// and they are going to stay in the list.
-
-};
 
 USTRUCT()
 struct FGoKartState
@@ -69,54 +48,12 @@ public:
 
 	
 private:
-	
-	void SimulateMove(const FGoKartMove& Move);
-	FGoKartMove CreateMove(float DeltaTime);
+	// TODO: Organise them
 	void ClearAcknowledgeMoves(FGoKartMove LastMove);
-	/*
-	* The mass of the car in KG
-	*/
-	UPROPERTY(EditAnywhere)
-	float Mass = 1000.0f;
-
-	/*
-	* The MaxDrivingForce of the car in N
-	*/
-	UPROPERTY(EditAnywhere)
-	float MaxDrivingForce = 10000;
-
-
-	UPROPERTY(EditAnywhere)
-	float MinTurningRadius = 10;
-
-	/*
-	* The MaxDrivingForce of the car in N
-	*/
-	UPROPERTY(EditAnywhere)
-	float DragCoefficient = 16;
-
-	/*
-	* Higher means more rolling resistance; 
-	*/
-	UPROPERTY(EditAnywhere)
-	float RollingResistenceCoefficient = 0.015;
-
-
-	UPROPERTY()
-	FVector Velocity;
-
 	UPROPERTY(ReplicatedUsing = OnRep_ServerState)
 	FGoKartState ServerState;
-
 	UFUNCTION()
 	void OnRep_ServerState();
-
-	float Throttle;
-	float SteeringThrow;
-
-	FVector GetAirResistance();
-	FVector GetRollingResistance();
-
 	/** These two functions are responsible for updating the car movement Localy then calling the Server_MoveForward and MoveRight sending them the value to 
 	 update them in the server, so they are both udpdate in the server and in the Clinet " Locally " */
 	void MoveForward(float Value);
@@ -124,11 +61,9 @@ private:
 	/** These two functions are responsible for updating the car movement in the server */
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendMove(FGoKartMove Move);
-
-	void UpdateLocationFromVelocity(float DeltaTime);
-
-	void ApplyRotation(float DeltaTime, float SteeringThrow);
-
 	TArray<FGoKartMove> UnacknowledgedMoves;
+	
+	UPROPERTY(EditAnywhere)
+	UGoKartMovementComponent* GoKartMovementComponent;
 
 };
