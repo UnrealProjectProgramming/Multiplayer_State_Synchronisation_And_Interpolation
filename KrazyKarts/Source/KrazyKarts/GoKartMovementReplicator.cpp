@@ -36,6 +36,12 @@ void UGoKartMovementReplicator::TickComponent(float DeltaTime, ELevelTick TickTy
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// PsudoCode for linear Interpolation
+	// TargetLocation = ServerState.Location
+	// Lerp ratio = TimeScienceUpdate / TimeBetweenLastUpdates
+	// NextLocation = Lerp ( StartLocation, TargetLocation , Lerp ratio)
+	// SetLocation (NextLocation)
+
 	if (!ensure(MovementComponent != nullptr)) { return; }
 	FGoKartMove LastMove = MovementComponent->GetLastMove();
 	if (GetOwnerRole() == ROLE_AutonomousProxy)
@@ -76,6 +82,8 @@ void UGoKartMovementReplicator::ClearAcknowledgeMoves(FGoKartMove LastMove)
 
 void UGoKartMovementReplicator::OnRep_ServerState()
 {
+	// PsudoCode for linear Interpolation
+    // StartLocation = GetLocation()
 	if (!ensure(MovementComponent != nullptr)) { return; }
 
 	GetOwner()->SetActorTransform(ServerState.Transform);
