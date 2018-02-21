@@ -41,4 +41,10 @@
   responsible for replicating components and 2nd compnent must have direct access to first one.
 
 
+
+* Linear Interpolation: curve fitting using linear polynomials to construct new data points https://en.wikipedia.org/wiki/Linear_interpolation 
+
+* Spherical Linear Interpolation: we are doing linear interpoliation but SPHERICAL, we can't use lerp as it dsnt know about a circle or a sphere, if I have an actor and its initial rot is -100deg and it wants to go to 90deg
+  The Lerp will find that the shortest way to interpolate is starting from Zero because it dsnt know that the shortest way from A to B is -180 to 180 , so thats when Slerp comes to the rescue.
+  
 * Hermite Cubic Spline Interpolation https://www.desmos.com/calculator/iexoeledct
