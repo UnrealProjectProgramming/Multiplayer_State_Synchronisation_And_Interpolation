@@ -36,11 +36,6 @@ void UGoKartMovementReplicator::TickComponent(float DeltaTime, ELevelTick TickTy
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// PsudoCode for linear Interpolation
-	// TargetLocation = ServerState.Location
-	// Lerp ratio = TimeScienceUpdate / TimeBetweenLastUpdates
-	// NextLocation = Lerp ( StartLocation, TargetLocation , Lerp ratio)
-	// SetLocation (NextLocation)
 
 	if (!ensure(MovementComponent != nullptr)) { return; }
 	FGoKartMove LastMove = MovementComponent->GetLastMove();
@@ -49,14 +44,14 @@ void UGoKartMovementReplicator::TickComponent(float DeltaTime, ELevelTick TickTy
 		UnacknowledgedMoves.Add(LastMove);
 		Server_SendMove(LastMove);
 	}
-	if (GetOwnerRole() == ROLE_SimulatedProxy)
-	{
-		MovementComponent->SimulateMove(ServerState.LastMove);
-	}
 	// This means that we are the server and in controll of the Pawn.
 	if (GetOwner()->GetRemoteRole() == ROLE_SimulatedProxy)
 	{
 		UpdateServerState(LastMove);
+	}
+	if (GetOwnerRole() == ROLE_SimulatedProxy)
+	{
+		ClientTick(DeltaTime);
 	}
 }
 
@@ -65,6 +60,24 @@ void UGoKartMovementReplicator::UpdateServerState(FGoKartMove Move)
 	ServerState.LastMove = Move;
 	ServerState.Transform = GetOwner()->GetActorTransform();
 	ServerState.Velocity = MovementComponent->GetVelocity();
+}
+
+void UGoKartMovementReplicator::ClientTick(float DeltaTime)
+{
+	// PsudoCode for linear Interpolation
+	// TargetLocation = ServerState.Location
+	// Lerp ratio = TimeScienceUpdate / TimeBetweenLastUpdates
+	// NextLocation = Lerp ( StartLocation, TargetLocation , Lerp ratio)
+	// SetLocation (NextLocation)
+
+	ClientTimeSinceUpdate += DeltaTime;
+	if (ClientTimeBetweenLastUpdates < KINDA_SMALL_NUMBER) { return; }
+
+	auto TargetLocation = ServerState.Transform.GetLocation();
+	float LerpRatio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdates;
+	auto NextLocation = FMath::LerpStable(ClientStartLocation, TargetLocation, LerpRatio);
+	GetOwner()->SetActorLocation(NextLocation);
+
 }
 
 void UGoKartMovementReplicator::ClearAcknowledgeMoves(FGoKartMove LastMove)
@@ -82,10 +95,22 @@ void UGoKartMovementReplicator::ClearAcknowledgeMoves(FGoKartMove LastMove)
 
 void UGoKartMovementReplicator::OnRep_ServerState()
 {
-	// PsudoCode for linear Interpolation
-    // StartLocation = GetLocation()
-	if (!ensure(MovementComponent != nullptr)) { return; }
+	switch (GetOwnerRole())
+	{
+	case ROLE_AutonomousProxy:
+		AutonomousProxy_OnRep_ServerState();
+		break;
+	case ROLE_SimulatedProxy:
+		SimulatedProxy_OnRep_ServerState();
+		break;
+	default:
+		break;
+	}
+}
 
+void UGoKartMovementReplicator::AutonomousProxy_OnRep_ServerState()
+{
+	if (!ensure(MovementComponent != nullptr)) { return; }
 	GetOwner()->SetActorTransform(ServerState.Transform);
 	MovementComponent->SetVelocity(ServerState.Velocity);
 	ClearAcknowledgeMoves(ServerState.LastMove);
@@ -93,6 +118,17 @@ void UGoKartMovementReplicator::OnRep_ServerState()
 	{
 		MovementComponent->SimulateMove(Move);
 	}
+}
+
+void UGoKartMovementReplicator::SimulatedProxy_OnRep_ServerState()
+{
+	// PsudoCode for linear Interpolation
+	// StartLocation = GetLocation()
+
+	ClientTimeBetweenLastUpdates = ClientTimeSinceUpdate;
+	ClientTimeSinceUpdate = 0;
+
+	ClientStartLocation = GetOwner()->GetActorLocation();
 }
 
 
