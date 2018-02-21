@@ -39,6 +39,7 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	
 private:
 	void ClearAcknowledgeMoves(FGoKartMove LastMove);
 
@@ -47,6 +48,7 @@ private:
 	UFUNCTION()
 	void OnRep_ServerState();
 
+	void UpdateServerState(FGoKartMove Move);
 
 	/** These two functions are responsible for updating the car movement in the server */
 	UFUNCTION(Server, Reliable, WithValidation)
