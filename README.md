@@ -39,3 +39,6 @@
   Refactoring Process : we Have our main Class which is GoKart Actor in this class we will Handle Input Binding and we will refactor two compoanents from it 
   First component will be Movement Component and it will be responsible for smimulating movement, 2nd Component will be Replication Component and it will be 
   responsible for replicating components and 2nd compnent must have direct access to first one.
+
+
+* Hermite Cubic Spline Interpolation https://www.desmos.com/calculator/iexoeledct
