@@ -8,7 +8,7 @@
 
 #include "GoKartMovementComponent.h"
 
-// Sets default values
+// Sets default valuesk
 AGoKart::AGoKart()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
