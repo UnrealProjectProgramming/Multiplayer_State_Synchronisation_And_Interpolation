@@ -25,6 +25,7 @@ struct FGoKartMove
 					// This way when we recive our LastMove from the server we can acknoldge moves and we can check if they are before or equal to that LastMove
 					// and in that case we can remove them because they are Old moves. and they new moves are the one that are greater than the LastTime
 					// and they are going to stay in the list.
+
 };
 
 
@@ -83,6 +84,5 @@ private:
 
 	float Throttle;
 	float SteeringThrow;
-
 	FGoKartMove LastMove;
 };

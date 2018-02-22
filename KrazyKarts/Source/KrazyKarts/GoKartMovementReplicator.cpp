@@ -4,6 +4,7 @@
 
 #include "UnrealNetwork.h"
 #include "GameFramework/Actor.h"
+#include "Engine/World.h"
 
 // Sets default values for this component's properties
 UGoKartMovementReplicator::UGoKartMovementReplicator()
@@ -167,7 +168,7 @@ void UGoKartMovementReplicator::SimulatedProxy_OnRep_ServerState()
 	{
 		ClientStartTransform.SetLocation(MeshOffsetRoot->GetComponentLocation());
 		ClientStartTransform.SetRotation(MeshOffsetRoot->GetComponentQuat());
-	}
+	 }
 	ClientStartTransform = GetOwner()->GetActorTransform();
 	ClientStartVelocity = MovementComponent->GetVelocity();
 
@@ -177,7 +178,7 @@ void UGoKartMovementReplicator::SimulatedProxy_OnRep_ServerState()
 void UGoKartMovementReplicator::Server_SendMove_Implementation(FGoKartMove Move)
 {
 	if (!ensure(MovementComponent != nullptr)) { return; }
-
+	ClientSimulatedTime += Move.DeltaTime;
 	MovementComponent->SimulateMove(Move);
 	UpdateServerState(Move);
 }
@@ -185,7 +186,19 @@ void UGoKartMovementReplicator::Server_SendMove_Implementation(FGoKartMove Move)
 bool UGoKartMovementReplicator::Server_SendMove_Validate(FGoKartMove Move)
 {
 	bool bIsValid = (Move.Throttle <= 1 && Move.Throttle >= -1 && Move.SteeringThrow <= 1 && Move.SteeringThrow >= -1);
-	return bIsValid;
+	float ProposedTime = ClientSimulatedTime + Move.DeltaTime;
+	bool ClientNotRunningAhead = ProposedTime < GetWorld()->TimeSeconds;
+	if (!ClientNotRunningAhead)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Client is running to fast"))
+		return false;
+	}
+	if (!bIsValid)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Recived Invalid Move"))
+		return false;
+	}
+	return true;
 }
 
 
