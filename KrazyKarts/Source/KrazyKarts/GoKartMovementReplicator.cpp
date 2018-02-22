@@ -64,29 +64,32 @@ void UGoKartMovementReplicator::UpdateServerState(FGoKartMove Move)
 
 void UGoKartMovementReplicator::ClientTick(float DeltaTime)
 {
-	// PsudoCode for linear Interpolation
-	// TargetLocation = ServerState.Location
-	// Lerp ratio = TimeScienceUpdate / TimeBetweenLastUpdates
-	// NextLocation = Lerp ( StartLocation, TargetLocation , Lerp ratio)
-	// SetLocation (NextLocation)
 
 	ClientTimeSinceUpdate += DeltaTime;
 	if (ClientTimeBetweenLastUpdates < KINDA_SMALL_NUMBER) { return; }
+	if (!ensure(MovementComponent != nullptr)) { return; }
 
 	auto TargetLocation = ServerState.Transform.GetLocation();
 	auto TargetRotation = ServerState.Transform.GetRotation();
 
 	float LerpRatio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdates;
+	float VelocityToDerivative = ClientTimeBetweenLastUpdates * 100;
 
 	FVector StartLocation = ClientStartTransform.GetLocation();
 	FQuat StartRotation = ClientStartTransform.GetRotation();
+	FVector StartDerivative = ClientStartVelocity * VelocityToDerivative;
+	FVector TargetDerivative = ServerState.Velocity * VelocityToDerivative;
+	FVector NewLocation = FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
+	FVector NewDerivative = FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
 
-	auto NewLocation = FMath::LerpStable(StartLocation, TargetLocation, LerpRatio);
+	FVector NewVelocity = NewDerivative / VelocityToDerivative;
+	MovementComponent->SetVelocity(NewVelocity);
+
 	auto NewRotation = FQuat::Slerp(StartRotation, TargetRotation, LerpRatio);
 
 	GetOwner()->SetActorLocation(NewLocation);
 	GetOwner()->SetActorRotation(NewRotation);
-}
+} 
 
 void UGoKartMovementReplicator::ClearAcknowledgeMoves(FGoKartMove LastMove)
 {
@@ -130,13 +133,14 @@ void UGoKartMovementReplicator::AutonomousProxy_OnRep_ServerState()
 
 void UGoKartMovementReplicator::SimulatedProxy_OnRep_ServerState()
 {
-	// PsudoCode for linear Interpolation
-	// StartLocation = GetLocation()
+	if (!ensure(MovementComponent != nullptr)) { return; }
 
 	ClientTimeBetweenLastUpdates = ClientTimeSinceUpdate;
 	ClientTimeSinceUpdate = 0;
 
 	ClientStartTransform = GetOwner()->GetActorTransform();
+	ClientStartVelocity = MovementComponent->GetVelocity();
+
 }
 
 
