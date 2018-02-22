@@ -64,32 +64,51 @@ void UGoKartMovementReplicator::UpdateServerState(FGoKartMove Move)
 
 void UGoKartMovementReplicator::ClientTick(float DeltaTime)
 {
-
 	ClientTimeSinceUpdate += DeltaTime;
+
 	if (ClientTimeBetweenLastUpdates < KINDA_SMALL_NUMBER) { return; }
 	if (!ensure(MovementComponent != nullptr)) { return; }
 
-	auto TargetLocation = ServerState.Transform.GetLocation();
-	auto TargetRotation = ServerState.Transform.GetRotation();
-
 	float LerpRatio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdates;
-	float VelocityToDerivative = ClientTimeBetweenLastUpdates * 100;
+	FHermiteCubicSpline Spline = CreateSpline();
+	InterpolateLocation(Spline, LerpRatio);
+	InterpolateVelocity(Spline, LerpRatio);
+	InterpolateRotation(LerpRatio);
+}
 
-	FVector StartLocation = ClientStartTransform.GetLocation();
-	FQuat StartRotation = ClientStartTransform.GetRotation();
-	FVector StartDerivative = ClientStartVelocity * VelocityToDerivative;
-	FVector TargetDerivative = ServerState.Velocity * VelocityToDerivative;
-	FVector NewLocation = FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
-	FVector NewDerivative = FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
+FHermiteCubicSpline UGoKartMovementReplicator::CreateSpline()
+{
+	FHermiteCubicSpline Spline;
 
-	FVector NewVelocity = NewDerivative / VelocityToDerivative;
-	MovementComponent->SetVelocity(NewVelocity);
+	Spline.TargetLocation = ServerState.Transform.GetLocation();
+	Spline.StartLocation = ClientStartTransform.GetLocation();
+	Spline.StartDerivative = ClientStartVelocity * GetVelocityToDerivative();
+	Spline.TargetDerivative = ServerState.Velocity * GetVelocityToDerivative();
 
-	auto NewRotation = FQuat::Slerp(StartRotation, TargetRotation, LerpRatio);
+	return Spline;
+}
 
+void UGoKartMovementReplicator::InterpolateLocation(const FHermiteCubicSpline &Spline, float LerpRatio)
+{
+	FVector NewLocation = Spline.InterpolateLocation(LerpRatio);
 	GetOwner()->SetActorLocation(NewLocation);
+}
+
+void UGoKartMovementReplicator::InterpolateVelocity(const FHermiteCubicSpline &Spline, float LerpRatio)
+{
+	FVector NewDerivative = Spline.InterpolateDerivative(LerpRatio);
+	FVector NewVelocity = NewDerivative / GetVelocityToDerivative();
+	MovementComponent->SetVelocity(NewVelocity);
+}
+
+void UGoKartMovementReplicator::InterpolateRotation(float LerpRatio)
+{
+	auto TargetRotation = ServerState.Transform.GetRotation();
+	FQuat StartRotation = ClientStartTransform.GetRotation();
+	auto NewRotation = FQuat::Slerp(StartRotation, TargetRotation, LerpRatio);
 	GetOwner()->SetActorRotation(NewRotation);
-} 
+}
+
 
 void UGoKartMovementReplicator::ClearAcknowledgeMoves(FGoKartMove LastMove)
 {
